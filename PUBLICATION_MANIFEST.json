@@ -1,0 +1,110 @@
+{
+  "status": "prepared locally; not uploaded; target account write permission pending",
+  "files": [
+    {
+      "path": ".gitignore",
+      "size": 197,
+      "sha256": "a2c4b5babe3da0b5ef5e8d0ebd3bdbf3082aa76ef54b8d19516c6fcb6f963d08"
+    },
+    {
+      "path": "CONTRIBUTIONS.md",
+      "size": 756,
+      "sha256": "7e28f35b1e39ca897b1c3a631c89ed2352a22e0d0f8e18a17a5a5959f6eff246"
+    },
+    {
+      "path": "NOTICE.md",
+      "size": 629,
+      "sha256": "92385d2b8e1d9ec0a4a16a5c7a816be6799bec07b39a92e8c9f674767af1f04b"
+    },
+    {
+      "path": "README.md",
+      "size": 5375,
+      "sha256": "0bcadd3710da5b3e4e5777e8b1a6ec0959e2dbe2887f292cce5cc13b73404484"
+    },
+    {
+      "path": "app_development/Group2_Biosignal.aia",
+      "size": 211013,
+      "sha256": "906038e47ace9656cefc38bc55ed390ddbba42212571afeff25c4faa1770f06e"
+    },
+    {
+      "path": "app_development/build_project.py",
+      "size": 11123,
+      "sha256": "beb1746d3c059995d7743f6795d80f0240398026cafb173d505ecc4724247d9d"
+    },
+    {
+      "path": "app_development/native_block_test_results.json",
+      "size": 591,
+      "sha256": "4b4b8d3275acdd704c344e531249b7aafe854b4f216c909327c2315034e191cb"
+    },
+    {
+      "path": "app_development/project_validation.json",
+      "size": 245,
+      "sha256": "e3459528fc1a15a9a1b2020b38b9abdc2bc87a6618ea10c12567ec4ee342a01f"
+    },
+    {
+      "path": "app_development/test_native_blocks.py",
+      "size": 5565,
+      "sha256": "4c954aeb282000cd7332b1b83c863cc76224070bb308dde82839c2033fdee6e2"
+    },
+    {
+      "path": "app_development/test_waveform.js",
+      "size": 4647,
+      "sha256": "d889d95bebfbb51e58eae7d4d3f57970d61a348b14c59f4e2135c474878a710a"
+    },
+    {
+      "path": "app_development/waveform.html",
+      "size": 10222,
+      "sha256": "eeb769b6bcd9855370598bd6f600bb99ce1ccd00b86c6016a2ae6008dc52e1d1"
+    },
+    {
+      "path": "app_development/waveform_test_results.json",
+      "size": 1563,
+      "sha256": "407f23f98c6e8da33171ef383675245de1bd6c4305a599e3164ab0301273300d"
+    },
+    {
+      "path": "arduino/Group2_Biosignal/Group2_Biosignal.ino",
+      "size": 795,
+      "sha256": "65f3dcc87dd4190815f5f53e478375e87f5299a217b09a4da796f4dbe544489c"
+    },
+    {
+      "path": "biosignal_analysis/ecg_emg/analyze_ecg_emg.py",
+      "size": 40113,
+      "sha256": "9e48a29cb5e382e432d8001005e67672072ead7113d5bf26ceafa6f4ff04a6dc"
+    },
+    {
+      "path": "biosignal_analysis/ecg_emg/raw/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "biosignal_analysis/ecg_emg/requirements.txt",
+      "size": 94,
+      "sha256": "945fe63e2ca79bc4a33656d50c7858d335aafc597e53e3c82a44f3a595ae90b6"
+    },
+    {
+      "path": "biosignal_analysis/eeg/analyze_eeg.py",
+      "size": 37135,
+      "sha256": "f174e966f6902f3b4bb30924d28cd00ddc35a13c62f205122ff6bcd9d001f7ef"
+    },
+    {
+      "path": "biosignal_analysis/eeg/raw/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "biosignal_analysis/eeg/requirements.txt",
+      "size": 137,
+      "sha256": "7e2753125b3f782c165d004be55cb1622e52c4ce581e5482eedd392addfd3432"
+    },
+    {
+      "path": "prepare_hw1_inputs.py",
+      "size": 5288,
+      "sha256": "b19b9e6ad1b7e9e04e7050c595b450aaceb526d9e518c57788b7c678cee400c3"
+    },
+    {
+      "path": "upload/Group2_Biosignal.aia",
+      "size": 205155,
+      "sha256": "13def096c651a43c04d12307869d9c5f7c7a92914fcc08d2e180add63475dbfe"
+    }
+  ]
+}
