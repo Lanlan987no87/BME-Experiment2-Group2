@@ -1,0 +1,58 @@
+{
+  "tests": [
+    {
+      "test": "several frames in one notification",
+      "status": "passed"
+    },
+    {
+      "test": "one frame split across notifications",
+      "status": "passed"
+    },
+    {
+      "test": "identical consecutive notification contents are retained",
+      "status": "passed"
+    },
+    {
+      "test": "reject malformed and out-of-range frames; recover next good frame",
+      "status": "passed"
+    },
+    {
+      "test": "incomplete final candidate waits for closing star",
+      "status": "passed"
+    },
+    {
+      "test": "100 random packet fragmentations preserve all samples",
+      "status": "passed"
+    },
+    {
+      "test": "window is bounded to latest 100 with valid CSV indices",
+      "status": "passed"
+    },
+    {
+      "test": "pause freezes display while background data continues",
+      "status": "passed"
+    },
+    {
+      "test": "reconnect starts a new session and discards partial frame",
+      "status": "passed"
+    },
+    {
+      "test": "overflow discards partial candidate and reports overflow counter",
+      "status": "passed"
+    },
+    {
+      "test": "disconnect keeps plotted samples and resets unfinished candidate",
+      "status": "passed"
+    },
+    {
+      "test": "clear resets samples and counters",
+      "status": "passed"
+    },
+    {
+      "test": "pull mailbox does not overwrite a pending poll or export request",
+      "status": "passed"
+    }
+  ],
+  "canvas_calls_exercised": 792,
+  "environment": "Node VM with DOM/canvas stubs; not Android hardware or browser layout validation"
+}

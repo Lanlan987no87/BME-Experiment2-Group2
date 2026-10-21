@@ -1,0 +1,9 @@
+{
+  "block_count": 221,
+  "component_count": 15,
+  "extension_binaries_unchanged": true,
+  "zip_crc_check": "passed",
+  "xml_json_parse": "passed",
+  "hardware_test": "pending on user tablet",
+  "apk_build": "not performed; use MIT build menu"
+}

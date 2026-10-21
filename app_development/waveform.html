@@ -1,0 +1,98 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Group 2 ADC waveform</title><style>
+:root{font-family:system-ui,sans-serif;color:#122c40;background:#f1f5f9}*{box-sizing:border-box}body{margin:0;padding:12px}.bar,.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.bar{justify-content:space-between}h2{font-size:20px;margin:0}.badge{font-size:13px;background:#e2e8f0;border-radius:16px;padding:6px 10px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.card{background:white;border-radius:10px;padding:10px;border:1px solid #dbe5ee}.card small{display:block;font-size:12px;color:#52697c}.card strong{font-size:25px;font-variant-numeric:tabular-nums}.plot{background:white;border:1px solid #dbe5ee;border-radius:12px;padding:6px}canvas{width:100%;height:290px;display:block}button{padding:10px 14px;border:1px solid #b9cddc;border-radius:8px;background:white;color:#183c57;font-size:15px}button.primary{background:#116b90;color:white;border-color:#116b90}.controls{margin:12px 0}.note{font-size:12px;line-height:1.6;color:#52697c}.warning{color:#9c3f00}details{margin-top:10px}summary{font-size:13px}pre{white-space:pre-wrap;word-break:break-all;background:white;padding:8px;font-size:12px}textarea{width:100%;height:130px;font-family:monospace}.hide{display:none}@media(max-width:440px){.stats{grid-template-columns:repeat(2,1fr)}canvas{height:250px}.card strong{font-size:22px}}
+</style></head><body>
+<div class="bar"><h2>ADC waveform</h2><span id="status" class="badge">等待藍牙連線</span></div>
+<div class="stats"><div class="card"><small>最新 ADC counts</small><strong id="latest">—</strong></div><div class="card"><small>最近 100 筆最低／最高</small><strong id="range">—</strong></div><div class="card"><small>有效封包累計</small><strong id="total">0</strong></div><div class="card"><small>目前視窗筆數</small><strong id="count">0 / 100</strong></div></div>
+<div class="plot"><canvas id="plot" aria-label="最近100筆ADC counts波形"></canvas></div>
+<div class="controls"><button id="pause" class="primary">暫停畫面</button><button id="clear">清除資料</button><button id="export">匯出最近 100 筆 CSV</button></div>
+<div id="health" class="note">尚未收到完整 *Q數值* 封包。</div>
+<div class="note">橫軸：有效接收樣本序號；縱軸：原始 ADC counts（0–1023）。暫停只凍結畫面，接收仍持續。實際取樣率、傳輸掉點率與 ADC 電壓換算尚未校準。</div>
+<details><summary>接收診斷</summary><pre id="diagnostic">等待資料</pre></details>
+<div id="csvbox" class="hide"><p class="note">下方可選取／複製 CSV。Android App 另會將檔案存入 App 私有儲存區並開啟分享選單。</p><textarea id="csv" readonly></textarea><button id="copy">複製 CSV</button><span id="copyResult" class="note"></span></div>
+<script>
+'use strict';
+// No networking, remote scripts, synthesized samples or ADC-to-voltage assumptions.
+class FrameParser {
+ constructor(onValue){this.onValue=onValue;this.frame='';this.active=false;this.invalid=0;this.characters=0;}
+ resetPartial(){this.frame='';this.active=false;}
+ feed(chunk){
+  this.characters+=chunk.length;
+  for(const ch of chunk){
+   if(ch==='*'){
+    if(this.active && this.frame.length){
+     if(/^Q[0-9]{1,4}$/.test(this.frame) && Number(this.frame.slice(1))<=1023)this.onValue(Number(this.frame.slice(1)));
+     else this.invalid++;
+    }
+    // Every star closes the preceding candidate and also permits resynchronization.
+    this.frame='';this.active=true;
+   } else if(this.active){
+    this.frame+=ch;
+    if(this.frame.length>5){this.invalid++;this.resetPartial();}
+   }
+  }
+ }
+}
+const model={samples:[],total:0,paused:false,frozen:null,latest:null,lastArrival:0,session:null,status:'等待藍牙連線',overflows:0,raw:'',dirty:true};
+const parser=new FrameParser(value=>{model.total++;model.latest=value;model.samples.push({index:model.total,value});if(model.samples.length>100)model.samples.shift();model.lastArrival=Date.now();model.dirty=true;});
+function resetData(){model.samples=[];model.total=0;model.latest=null;model.lastArrival=0;model.raw='';model.frozen=null;model.paused=false;parser.resetPartial();parser.invalid=0;parser.characters=0;document.getElementById('pause').textContent='暫停畫面';document.getElementById('csvbox').classList.add('hide');model.dirty=true;}
+function acceptEnvelope(text){
+ // Native sender: session|overflowCounter|status|raw ASCII. Only raw field may contain |.
+ const a=text.indexOf('|'),b=text.indexOf('|',a+1),c=text.indexOf('|',b+1);
+ if(a<0||b<0||c<0)return false;
+ const session=text.slice(0,a),overflows=Number(text.slice(a+1,b));
+ if(model.session!==session){resetData();model.session=session;}
+ if(overflows!==model.overflows){parser.resetPartial();model.overflows=overflows;}
+ model.status=text.slice(b+1,c);document.getElementById('status').textContent=model.status;
+ const chunk=text.slice(c+1);
+ if(chunk){model.raw=(model.raw+chunk).slice(-180);parser.feed(chunk);}
+ if(model.status!=='已連線')parser.resetPartial();
+ model.dirty=true;return true;
+}
+function bridgeTick(){
+ const ai=window.AppInventor;if(!ai)return;
+ const text=String(ai.getWebViewString()||'');
+ if(text==='POLL'||text.startsWith('CSV:'))return;
+ if(text==='ACK'){ai.setWebViewString('');return;}
+ if(text){if(acceptEnvelope(text))ai.setWebViewString('');return;}
+ if(pendingExport){ai.setWebViewString('CSV:'+document.getElementById('csv').value);pendingExport=false;}
+ else ai.setWebViewString('POLL');
+}
+function draw(){
+ const view=model.paused&&model.frozen?model.frozen:{samples:model.samples,total:model.total,latest:model.latest};
+ const points=view.samples,values=points.map(p=>p.value);
+ document.getElementById('latest').textContent=view.latest===null?'—':view.latest;
+ document.getElementById('range').textContent=values.length?Math.min(...values)+' / '+Math.max(...values):'—';
+ document.getElementById('total').textContent=model.total;document.getElementById('count').textContent=points.length+' / 100';
+ const canvas=document.getElementById('plot'),r=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+ const w=r.width,h=r.height,L=48,R=14,T=23,B=40,pw=w-L-R,ph=h-T-B;ctx.clearRect(0,0,w,h);ctx.font='12px sans-serif';ctx.lineWidth=1;
+ for(const value of [0,256,512,768,1023]){const y=T+ph*(1-value/1023);ctx.strokeStyle='#e2e8f0';ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(w-R,y);ctx.stroke();ctx.fillStyle='#52697c';ctx.textAlign='right';ctx.fillText(value,L-7,y+4);}
+ const first=points.length?points[0].index:1;
+ for(const offset of [0,25,50,75,99]){const x=L+pw*offset/99;ctx.strokeStyle='#f0f4f8';ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,T+ph);ctx.stroke();ctx.fillStyle='#52697c';ctx.textAlign=offset===99?'right':offset===0?'left':'center';ctx.fillText(first+offset,x,T+ph+19);}
+ ctx.fillStyle='#52697c';ctx.textAlign='left';ctx.fillText('ADC counts',L,T-7);ctx.textAlign='center';ctx.fillText('接收樣本序號',L+pw/2,h-5);
+ if(points.length){ctx.strokeStyle='#087d9c';ctx.lineWidth=2;ctx.beginPath();points.forEach((p,i)=>{const x=L+pw*i/99,y=T+ph*(1-p.value/1023);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();if(points.length===1){ctx.beginPath();ctx.arc(L,T+ph*(1-points[0].value/1023),3,0,Math.PI*2);ctx.fillStyle='#087d9c';ctx.fill();}}
+ else{ctx.fillStyle='#718699';ctx.textAlign='center';ctx.fillText('等待有效 *Q數值* 資料',L+pw/2,T+ph/2);}
+}
+function refresh(){
+ if(model.dirty){draw();model.dirty=false;}
+ const idle=model.lastArrival?Date.now()-model.lastArrival:null;
+ const health=document.getElementById('health');
+ let text=model.paused?'畫面已暫停，背景持續接收。':'即時顯示。';
+ if(!model.total)text='尚未收到完整 *Q數值* 封包。';
+ else if(model.status!=='已連線')text='連線已中斷；保留最後資料。';
+ else if(idle>3000)text='已連線，但超過 3 秒沒有有效封包；請檢查供電與 Arduino 傳送。';
+ if(model.overflows)text+=' 原生接收緩衝區曾溢位 '+model.overflows+' 次，存在資料遺失。';
+ health.textContent=text;health.className='note'+(model.overflows||(idle>3000&&model.status==='已連線')?' warning':'');
+ document.getElementById('diagnostic').textContent='最近原始片段：'+(model.raw||'無')+'\n接收字元：'+parser.characters+'；無效候選：'+parser.invalid+'；原生緩衝溢位：'+model.overflows+'\n封包沒有序號／時間戳，無法計算傳輸掉點率或真實取樣率。';
+}
+function csvText(){const view=model.paused&&model.frozen?model.frozen.samples:model.samples;return 'received_sample_index,adc_count\n'+view.map(p=>p.index+','+p.value).join('\n')+'\n';}
+document.getElementById('pause').onclick=()=>{model.paused=!model.paused;model.frozen=model.paused?{samples:model.samples.map(p=>({...p})),latest:model.latest,total:model.total}:null;document.getElementById('pause').textContent=model.paused?'繼續顯示':'暫停畫面';model.dirty=true;refresh();};
+document.getElementById('clear').onclick=()=>{resetData();refresh();};
+let pendingExport=false;
+document.getElementById('export').onclick=()=>{document.getElementById('csv').value=csvText();document.getElementById('csvbox').classList.remove('hide');pendingExport=true;};
+document.getElementById('copy').onclick=async()=>{const box=document.getElementById('csv');box.focus();box.select();try{if(navigator.clipboard)await navigator.clipboard.writeText(box.value);else if(!document.execCommand('copy'))throw Error();document.getElementById('copyResult').textContent='已複製';}catch(e){document.getElementById('copyResult').textContent='請長按文字區選取並複製';}};
+setInterval(bridgeTick,40);
+setInterval(refresh,100);window.addEventListener('resize',()=>{model.dirty=true;});
+// Test entry points: never synthesize data in normal operation.
+window.Group2={FrameParser,model,parser,acceptEnvelope,resetData,csvText,refresh};refresh();
+</script></body></html>

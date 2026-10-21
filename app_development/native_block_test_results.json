@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "BLE method names, event names and argument counts match bundled extension metadata",
+    "initialize, scan, device selection and notification subscription",
+    "multiple chunks accumulate and drain once on explicit webview poll",
+    "native bounded buffer overflow is counted and signaled",
+    "CSV command strips prefix, writes correct text then opens sharing chooser",
+    "disconnect and connection failure restore controls"
+  ],
+  "status": "passed",
+  "environment": "XML control-flow interpreter with mock components; not MIT import/build or Android hardware"
+}
